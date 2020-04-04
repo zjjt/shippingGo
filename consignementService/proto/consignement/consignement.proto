@@ -1,0 +1,28 @@
+syntax="proto3";
+
+package consignement;
+
+service ShippingService{
+    rpc CreateConsignement (Consignement) returns (Response){};
+    rpc GetConsignements (GetRequest) returns (Response){};
+}
+message Consignement{
+    string id=1;
+    string description=2;
+    int32 weight=3;
+    repeated Container containers=4;
+    string vessel_id=5;
+}
+message GetRequest{}
+message Container{
+    string id=1;
+    string customer_id=2;
+    string origin=3;
+    string user_id=4;
+}
+
+message Response{
+    bool created=1;
+    Consignement consignement=2;
+    repeated Consignement consignements=3;
+}
