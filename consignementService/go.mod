@@ -1,4 +1,4 @@
-module github.com/zjjt/shippingGo
+module github.com/zjjt/shippingGo/consignementService
 
 go 1.12
 
