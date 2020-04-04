@@ -2,13 +2,11 @@ package main
 
 import (
 	"context"
-	"log"
-	"net"
+	"fmt"
 	"sync"
 
+	"github.com/micro/go-micro/v2"
 	protoB "github.com/zjjt/shippingGo/consignementService/proto/consignement"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 )
 
 const (
@@ -57,36 +55,37 @@ func newService(repo *Repository) *service {
 	return &service{repo}
 }
 
-//CreateConsignement APIfrom our grpc service
-func (serv *service) CreateConsignement(ctx context.Context, req *protoB.Consignement) (*protoB.Response, error) {
+//CreateConsignement API from our grpc service
+func (serv *service) CreateConsignement(ctx context.Context, req *protoB.Consignement, res *protoB.Response) error {
 	//save consignement in DB
 	consignement, err := serv.repo.Create(req)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return &protoB.Response{Created: true, Consignement: consignement}, nil
+
+	res.Consignement = consignement
+	return nil
 }
 
 //GetConsignements get all consignements
-func (serv *service) GetConsignements(ctx context.Context, req *protoB.GetRequest) (*protoB.Response, error) {
+func (serv *service) GetConsignements(ctx context.Context, req *protoB.GetRequest, res *protoB.Response) error {
 	consignements := serv.repo.GetAll()
-	return &protoB.Response{Consignements: consignements}, nil
+	res.Consignements = consignements
+	return nil
 }
 
 func main() {
 	repo := newRepository()
-	lis, err := net.Listen("tcp", port)
-	if err != nil {
-		log.Fatalf("failed to listen to port %s \n err %v", port, err)
-	}
-	//Create a grpc server
-	server := grpc.NewServer()
-	//Registering our service
-	protoB.RegisterShippingServiceServer(server, newService(repo))
-	reflection.Register(server)
-	log.Println("Running on port:", port)
-	if err := server.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
+
+	//Create a grpc server with go micro
+	//the name must match the package name given in the protobuf file for service discovery
+	server := micro.NewService(micro.Name("shippingGo.service.consignement"))
+	//will parse the command line flags
+	server.Init()
+	//Registering our service hangler
+	protoB.RegisterShippingServiceHandler(server.Server(), newService(repo))
+	if err := server.Run(); err != nil {
+		fmt.Println(err)
 	}
 
 }
