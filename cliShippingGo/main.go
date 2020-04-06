@@ -31,7 +31,7 @@ func main() {
 	service := micro.NewService(micro.Name("shippingGo.consignement.cli"))
 	service.Init()
 	//create a client to exchange with the grpc server
-	client := pb.NewShippingServiceClient("shippingGo.consignement.cli", service.Client())
+	client := pb.NewShippingServiceClient("shippingGo.service.consignement", service.Client())
 	file := defaultFilename
 	if len(os.Args) > 1 {
 		file = os.Args[1]
