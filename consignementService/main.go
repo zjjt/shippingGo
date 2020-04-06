@@ -62,7 +62,7 @@ func (serv *service) CreateConsignement(ctx context.Context, req *protoB.Consign
 	if err != nil {
 		return err
 	}
-
+	res.Created = true
 	res.Consignement = consignement
 	return nil
 }

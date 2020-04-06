@@ -20,7 +20,7 @@ RUN apk --no-cache add ca-certificates
 
 RUN mkdir /app
 WORKDIR /app
-ADD consignment.json /app/consignment.json
+ADD consignement.json /app/consignement.json
 COPY --from=builder /app/shippingGoCliConsignement .
 
 CMD ["./shippingGoCliConsignement"]
