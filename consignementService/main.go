@@ -3,10 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/micro/go-micro/v2"
 	protoB "github.com/zjjt/shippingGo/consignementService/proto/consignement"
+	vesselProto "github.com/zjjt/shippingGo/vesselService/proto/vessel"
 )
 
 const (
@@ -48,15 +50,26 @@ func (repo *Repository) GetAll() []*protoB.Consignement {
 // in the generated code itself for the exact method signatures etc
 // to give you a better idea.
 type service struct {
-	repo repository
+	repo         repository
+	vesselClient vesselProto.VesselService
 }
 
-func newService(repo *Repository) *service {
-	return &service{repo}
+func newService(repo *Repository, vesselClient vesselProto.VesselService) *service {
+	return &service{repo, vesselClient}
 }
 
 //CreateConsignement API from our grpc service
 func (serv *service) CreateConsignement(ctx context.Context, req *protoB.Consignement, res *protoB.Response) error {
+	vesselResponse, err := serv.vesselClient.FindAvailable(context.Background(), &vesselProto.Specification{
+		MaxWeight: req.Weight,
+		Capacity:  int32(len(req.Containers)),
+	})
+	log.Printf("Found vessel %s \n", vesselResponse.Vessel.Name)
+	if err != nil {
+		return err
+	}
+	// we store in the VesselId as the vesseilId we got back from our vessel service
+	req.VesselId = vesselResponse.Vessel.Id
 	//save consignement in DB
 	consignement, err := serv.repo.Create(req)
 	if err != nil {
@@ -82,8 +95,9 @@ func main() {
 	server := micro.NewService(micro.Name("shippingGo.service.consignement"))
 	//will parse the command line flags
 	server.Init()
+	vesselClient := vesselProto.NewVesselService("shippingGo.service.vessel", server.Client())
 	//Registering our service hangler
-	protoB.RegisterShippingServiceHandler(server.Server(), newService(repo))
+	protoB.RegisterShippingServiceHandler(server.Server(), newService(repo, vesselClient))
 	if err := server.Run(); err != nil {
 		fmt.Println(err)
 	}
