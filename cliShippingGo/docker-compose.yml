@@ -1,0 +1,14 @@
+version: '3.5'
+
+services:
+  consignementMS:
+    restart: always
+    container_name: "shippinggo_cli_consignement"
+    build: .
+    networks:
+      - shippinggo-backend-tier #network to communicate with the other services
+    environment: 
+      MICRO_REGISTERY: "mdns"
+networks: 
+  shippinggo-backend-tier:
+    name: shippinggo-backend-tier

@@ -1,5 +1,5 @@
 compile_proto:
-	protoc --proto_path=.:$GOPATH/src --go_out=. --micro_out=. proto/vessel/vessel.proto
+	protoc --go_out=. --micro_out=. proto/vessel/vessel.proto
 build: 
 		docker build -t shippinggo_vesselms .
 run:

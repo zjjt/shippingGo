@@ -1,5 +1,5 @@
 compile_proto:
-	protoc --proto_path=.:$GOPATH/src --go_out=. --micro_out=. proto/consignement/consignement.proto
+	protoc  --go_out=. --micro_out=. proto/consignement/consignement.proto
 build: 
 		docker build -t shippinggo_consignementms .
 run:
