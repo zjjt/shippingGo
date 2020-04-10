@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sync"
+	"os"
 
 	"github.com/micro/go-micro/v2"
 	protoB "github.com/zjjt/shippingGo/consignementService/proto/consignement"
@@ -12,92 +12,34 @@ import (
 )
 
 const (
-	port = ":50051"
+	defaultDbHost = "datastore:27017"
 )
 
-type repository interface {
-	Create(*protoB.Consignement) (*protoB.Consignement, error)
-	GetAll() []*protoB.Consignement
-}
-
-//Repository Simulates a datastore of some kind
-type Repository struct {
-	mu            sync.RWMutex
-	consignements []*protoB.Consignement
-}
-
-//
-func newRepository() *Repository {
-	return &Repository{}
-}
-
-//Create a new consignement
-func (repo *Repository) Create(consignement *protoB.Consignement) (*protoB.Consignement, error) {
-	repo.mu.Lock()
-	updated := append(repo.consignements, consignement)
-	repo.consignements = updated
-	repo.mu.Unlock()
-	return consignement, nil
-}
-
-//GetAll gets all the consignement
-func (repo *Repository) GetAll() []*protoB.Consignement {
-	return repo.consignements
-}
-
-// Service should implement all of the methods to satisfy the service
-// we defined in our protobuf definition. You can check the interface
-// in the generated code itself for the exact method signatures etc
-// to give you a better idea.
-type service struct {
-	repo         repository
-	vesselClient vesselProto.VesselService
-}
-
-func newService(repo *Repository, vesselClient vesselProto.VesselService) *service {
-	return &service{repo, vesselClient}
-}
-
-//CreateConsignement API from our grpc service
-func (serv *service) CreateConsignement(ctx context.Context, req *protoB.Consignement, res *protoB.Response) error {
-	vesselResponse, err := serv.vesselClient.FindAvailable(context.Background(), &vesselProto.Specification{
-		MaxWeight: req.Weight,
-		Capacity:  int32(len(req.Containers)),
-	})
-	log.Printf("Found vessel %s \n", vesselResponse.Vessel.Name)
-	if err != nil {
-		return err
-	}
-	// we store in the VesselId as the vesseilId we got back from our vessel service
-	req.VesselId = vesselResponse.Vessel.Id
-	//save consignement in DB
-	consignement, err := serv.repo.Create(req)
-	if err != nil {
-		return err
-	}
-	res.Created = true
-	res.Consignement = consignement
-	return nil
-}
-
-//GetConsignements get all consignements
-func (serv *service) GetConsignements(ctx context.Context, req *protoB.GetRequest, res *protoB.Response) error {
-	consignements := serv.repo.GetAll()
-	res.Consignements = consignements
-	return nil
-}
-
 func main() {
-	repo := newRepository()
 
 	//Create a grpc server with go micro
 	//the name must match the package name given in the protobuf file for service discovery
 	server := micro.NewService(micro.Name("shippingGo.service.consignement"))
 	//will parse the command line flags
 	server.Init()
+	uri := os.Getenv("DB_HOST")
+	log.Println("uri is ", uri)
+	if uri == "" {
+		uri = defaultDbHost
+	}
+	//connect to the database
+	client, err := CreateDBClient(context.Background(), uri, 0)
+	if err != nil {
+		log.Panic(err)
+	}
+	defer client.Disconnect(context.Background())
+	//create a collection in the database
+	consignementCollection := client.Database("shippinggo").Collection("consignements")
+	repository := NewRepository(consignementCollection)
 	vesselClient := vesselProto.NewVesselService("shippingGo.service.vessel", server.Client())
 	//Registering our service hangler
-	protoB.RegisterShippingServiceHandler(server.Server(), newService(repo, vesselClient))
+	handler := newService(repository, vesselClient)
+	protoB.RegisterShippingServiceHandler(server.Server(), handler)
 	if err := server.Run(); err != nil {
 		fmt.Println(err)
 	}

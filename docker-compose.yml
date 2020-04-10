@@ -1,0 +1,58 @@
+version: '3.5'
+
+services:
+  shippinggo_cli_consignement:
+    depends_on: 
+      - "datastore"
+      - "shippinggo_vesselms"
+      - "shippinggo_consignementms"
+    restart: always
+    container_name: "shippinggo_cli_consignement"
+    build: ./cliShippingGo
+    ports:
+      - 9000
+    environment: 
+      MICRO_REGISTERY: "mdns"
+
+  shippinggo_userms:
+    build: ./userService
+    ports:
+      - 50053:50051
+    environment: 
+      MICRO_SERVER_ADDRESS: ":50051"
+
+  shippinggo_consignementms:
+    depends_on: 
+      - "datastore"
+      - "shippinggo_vesselms"
+    restart: always
+    container_name: "shippinggo_consignementms"
+    build: ./consignementService
+    ports:
+      - 50051:50051 #exposing this port on the docker network only not host
+    environment: 
+      DB_HOST: "mongodb://datastore:27017"
+      MICRO_SERVER_ADDRESS: ":50051"
+      MICRO_REGISTERY: "mdns"
+
+  shippinggo_vesselms:
+    depends_on: 
+      - "datastore"
+    restart: always
+    container_name: "shippinggo_vesselms"
+    build: ./vesselService
+    ports:
+      - 50052:50051 #exposing this port on the docker network only not host
+    environment: 
+      DB_HOST: "mongodb://datastore:27017"
+      MICRO_SERVER_ADDRESS: ":50051"
+      MICRO_REGISTERY: "mdns"
+      
+  datastore:
+    image: mongo:latest
+    ports:
+      - 27017:27017
+  database:
+    image: postgres
+    ports:
+      - 5432:5432
