@@ -18,9 +18,13 @@ services:
       MICRO_REGISTERY: "mdns"
   
   datastore:
+    networks:
+      - consignement-tier
     image: mongo:latest
     ports:
       - 27017
 networks: 
   shippinggo-backend-tier:
     name: shippinggo-backend-tier
+  consignement-tier:
+    name: consignement-tier

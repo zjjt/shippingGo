@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/micro/go-micro/v2"
-	"github.com/micro/go-micro/v2/util/log"
 	pb "github.com/zjjt/shippingGo/userService/proto/user"
 )
 
@@ -13,6 +13,8 @@ func main() {
 	defer db.Close()
 	if err != nil {
 		log.Fatalf("Could not connect to the database: %v", err)
+	} else {
+		log.Println("Connected to DB successfully")
 	}
 	// Automatically migrates the user struct
 	// into database columns/types etc. This will

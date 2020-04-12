@@ -7,8 +7,6 @@ services:
     build: .
     ports:
       - 50052:50051 #exposing this port on the docker network only not host
-    links:
-      - datastore
     depends_on: 
       - datastore
     networks:
@@ -20,21 +18,14 @@ services:
       MICRO_REGISTERY: "mdns"
   
   datastore:
-    image: mongo:latest
-    container_name: "shippinggo_vesselms_datastore"
-    environment: 
-      - MONGO_DATA_DIR=/data/db
-      - MONGO_LOG_DIR=/dev/null
-    volumes:
-      - ./data/db:/data/db #ensure data persistence between restarts
-    networks: 
+    networks:
       - vesselms-tier
+    image: mongo:latest
     ports:
       - 27017
-    command: mongod --logpath=/dev/null
 networks: 
   vesselms-tier:
     name: vesselms-tier
   shippinggo-backend-tier:
-    external: 
-      name: shippinggo-backend-tier
+    external: true
+      

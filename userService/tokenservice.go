@@ -1,6 +1,8 @@
 package main
 
 import (
+	"time"
+
 	"github.com/dgrijalva/jwt-go"
 	pb "github.com/zjjt/shippingGo/userService/proto/user"
 )
@@ -28,9 +30,11 @@ type TokenService struct {
 func newtokenService(repo repository) *TokenService {
 	return &TokenService{repo}
 }
+
+//Decode -check the token and see if it is valid and retrieves the details encoded within
 func (srv *TokenService) Decode(token string) (*CustomClaims, error) {
 	//parse the token
-	tokentype, err := jwt.ParseWithClaims(string(key), &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+	tokentype, err := jwt.ParseWithClaims(string(token), &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return key, nil
 	})
 	//validate the token and return the customclaims
@@ -41,11 +45,13 @@ func (srv *TokenService) Decode(token string) (*CustomClaims, error) {
 	}
 }
 
+//Encode -encode the data and creates the jwt
 func (srv *TokenService) Encode(user *pb.User) (string, error) {
+	exprireTime := time.Now().Add(time.Hour * 72).Unix()
 	claims := CustomClaims{
 		user,
 		jwt.StandardClaims{
-			ExpiresAt: 15000,
+			ExpiresAt: exprireTime,
 			Issuer:    "shippingGo.service.user",
 		},
 	}

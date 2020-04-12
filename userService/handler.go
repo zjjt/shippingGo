@@ -42,7 +42,7 @@ func (s *service) GetAll(ctx context.Context, req *pb.Request, res *pb.Response)
 func (s *service) Auth(ctx context.Context, req *pb.User, res *pb.Token) error {
 	log.Println("login in with:", req.Email, req.Password)
 	user, err := s.repo.GetByEmail(req.Email)
-	log.Println(user)
+	log.Println("user is ", user)
 	if err != nil {
 		return err
 	}

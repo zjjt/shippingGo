@@ -6,20 +6,32 @@ services:
       - "datastore"
       - "shippinggo_vesselms"
       - "shippinggo_consignementms"
-    restart: always
     container_name: "shippinggo_cli_consignement"
     build: ./cliShippingGo
-    ports:
-      - 9000
     environment: 
       MICRO_REGISTERY: "mdns"
 
+  shippinggo_cli_user:
+    build: ./userCli
+    container_name: "shippinggo_cli_user"
+    environment:
+     MICRO_REGISTRY: "mdns"
+    depends_on: 
+      - "shippinggo_userms"
+
   shippinggo_userms:
+    restart: always
     build: ./userService
     ports:
       - 50053:50051
+    depends_on: 
+      - "database"
     environment: 
       MICRO_SERVER_ADDRESS: ":50051"
+      DB_HOST: "database:5432"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_NAME: "postgres"
 
   shippinggo_consignementms:
     depends_on: 
@@ -56,3 +68,5 @@ services:
     image: postgres
     ports:
       - 5432:5432
+    environment: 
+      POSTGRES_PASSWORD: "postgres"

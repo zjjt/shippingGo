@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
 //CreateDBConnection -creates a conection to the sql database
@@ -16,7 +17,7 @@ func CreateDBConnection() (*gorm.DB, error) {
 
 	return gorm.Open(
 		"postgres",
-		fmt.Sprintf("host=%s user=%s dbname=%s sslmode=disable password=%s", host, user, dbname, password),
+		fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=disable", user, password, host, dbname),
 	)
 
 }

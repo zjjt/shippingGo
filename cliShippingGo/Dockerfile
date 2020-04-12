@@ -8,9 +8,10 @@ WORKDIR /app
 
 ENV GO111MODULE=on
 
-COPY . .
-
+COPY go.mod . 
+COPY go.sum .
 RUN go mod download
+COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o shippingGoCliConsignement
 
 # Run container
@@ -23,4 +24,4 @@ WORKDIR /app
 ADD consignement.json /app/consignement.json
 COPY --from=builder /app/shippingGoCliConsignement .
 
-CMD ["./shippingGoCliConsignement"]
+ENTRYPOINT ["./shippingGoCliConsignement"]

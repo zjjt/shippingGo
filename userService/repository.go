@@ -82,7 +82,7 @@ func (repo *UserRepository) GetAll() ([]*pb.User, error) {
 
 }
 func (repo *UserRepository) GetByEmail(email string) (*pb.User, error) {
-	var user *pb.User
+	user := &pb.User{}
 	if err := repo.db.Where("email = ?", email).First(&user).Error; err != nil {
 		return nil, err
 	}

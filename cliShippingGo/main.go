@@ -3,11 +3,15 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"log"
 	"os"
 
-	micro "github.com/micro/go-micro/v2"
+	"github.com/micro/go-micro/v2"
+	microclient "github.com/micro/go-micro/v2/client"
+	"github.com/micro/go-micro/v2/config/cmd"
+	"github.com/micro/go-micro/v2/metadata"
 	pb "github.com/zjjt/shippingGo/consignementService/proto/consignement"
 )
 
@@ -27,25 +31,36 @@ func parseFile(file string) (*pb.Consignement, error) {
 }
 
 func main() {
-	//set up a connection to the grpc server with go-micro
-	service := micro.NewService(micro.Name("shippingGo.consignement.cli"))
-	service.Init()
+	cmd.Init()
 	//create a client to exchange with the grpc server
-	client := pb.NewShippingService("shippingGo.service.consignement", service.Client())
+	client := pb.NewShippingService("shippingGo.service.consignement", microclient.DefaultClient)
+	service := micro.NewService(micro.Name("shippingGo.consignement.cli"))
+	//start the service
+	service.Init()
 	file := defaultFilename
-	if len(os.Args) > 1 {
-		file = os.Args[1]
+	var token string
+	log.Println(os.Args)
+	if len(os.Args) < 3 {
+		log.Fatal(errors.New("Not enough arguments,expecting file and token"))
 	}
+	file = os.Args[1]
+	token = os.Args[2]
 	consignement, err := parseFile(file)
 	if err != nil {
 		log.Fatalf("Could not parse file: %v", err)
 	}
-	r, err := client.CreateConsignement(context.Background(), consignement)
+	//Create a new context which contains our given token
+	//this same context will be passed into both the calls we make
+	//to our consignement service
+	ctx := metadata.NewContext(context.Background(), map[string]string{"token": token})
+	//and here we pass it into a call to create a consignement
+	r, err := client.CreateConsignement(ctx, consignement)
 	if err != nil {
 		log.Fatalf("Could not create consignement: %v", err)
 	}
 	log.Printf("Created: %t", r.Created)
-	getAll, err := client.GetConsignements(context.Background(), &pb.GetRequest{})
+	//second call
+	getAll, err := client.GetConsignements(ctx, &pb.GetRequest{})
 	if err != nil {
 		log.Fatalf("could not get all the consignements %v", err)
 	}

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 
 	protoB "github.com/zjjt/shippingGo/consignementService/proto/consignement"
 	vesselProto "github.com/zjjt/shippingGo/vesselService/proto/vessel"
@@ -28,12 +29,14 @@ func (serv *service) CreateConsignement(ctx context.Context, req *protoB.Consign
 		Capacity:  int32(len(req.Containers)),
 	})
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	// we store in the VesselId as the vesseilId we got back from our vessel service
 	req.VesselId = vesselResponse.Vessel.Id
 	//save consignement in DB
 	if err := serv.repo.Create(ctx, MarshalConsignement(req)); err != nil {
+		log.Println(err)
 		return err
 	}
 
@@ -46,6 +49,7 @@ func (serv *service) CreateConsignement(ctx context.Context, req *protoB.Consign
 func (serv *service) GetConsignements(ctx context.Context, req *protoB.GetRequest, res *protoB.Response) error {
 	consignements, err := serv.repo.GetAll(ctx)
 	if err != nil {
+		log.Println(err)
 		return err
 	}
 	res.Consignements = UnmarshalConsignementCollection(consignements)
