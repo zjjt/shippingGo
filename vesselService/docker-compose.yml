@@ -5,27 +5,29 @@ services:
     restart: always
     container_name: "shippinggo_vesselms"
     build: .
-    ports:
-      - 50052:50051 #exposing this port on the docker network only not host
-    depends_on: 
-      - datastore
-    networks:
-      - shippinggo-backend-tier #network to communicate with the other services
-      - vesselms-tier #internal network to communicate with the DB
+    # ports:
+    #   - 50052:50051 #exposing this port on the docker network only not host
+    # depends_on: 
+    #   - datastore
+    network_mode: host
+    # networks:
+    #   #- shippinggo-backend-tier #network to communicate with the other services
+    #   - vesselms-tier #internal network to communicate with the DB
     environment: 
-      DB_HOST: "mongodb://datastore:27017"
-      MICRO_SERVER_ADDRESS: ":50051"
+      DB_HOST: "mongodb://127.0.0.1:27017"
+      MICRO_SERVER_ADDRESS: ":50052"
       MICRO_REGISTERY: "mdns"
   
-  datastore:
-    networks:
-      - vesselms-tier
-    image: mongo:latest
-    ports:
-      - 27017
-networks: 
-  vesselms-tier:
-    name: vesselms-tier
-  shippinggo-backend-tier:
-    external: true
+#   datastore:
+#     restart: always
+#     networks:
+#       - vesselms-tier
+#     image: mongo:latest
+#     ports:
+#       - 27017
+# networks: 
+#   vesselms-tier:
+#     name: vesselms-tier
+#   # shippinggo-backend-tier:
+#   #   external: true
       

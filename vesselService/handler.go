@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"log"
 
 	pb "github.com/zjjt/shippingGo/vesselService/proto/vessel"
@@ -18,7 +20,8 @@ func newService(repo *VesselRepository) *service {
 func (service *service) FindAvailable(ctx context.Context, req *pb.Specification, res *pb.Response) error {
 	vessel, err := service.repo.FindAvailable(ctx, MarshalSpecification(req))
 	if err != nil {
-		return err
+		theerror := fmt.Sprintf("%v --from VesselService", err)
+		return errors.New(theerror)
 	}
 	res.Vessel = UnmarshalVessel(vessel)
 	return nil

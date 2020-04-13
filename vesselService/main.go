@@ -16,7 +16,7 @@ const (
 
 func createDummyVessels(repo repository) {
 	vessels := []*Vessel{
-		&Vessel{ID: "vessel001", Name: "Boaty McBoatface", MaxWeight: 200000, Capacity: 500},
+		{ID: "vessel001", Name: "Boaty McBoatface", MaxWeight: 200000, Capacity: 500},
 	}
 	for _, v := range vessels {
 		log.Printf("v is %v\n", v)
@@ -38,7 +38,8 @@ func main() {
 	//connect to the database
 	client, err := CreateDBClient(context.Background(), uri, 0)
 	if err != nil {
-		log.Panic(err)
+		theerror := fmt.Sprintf("%v --from VesselService", err)
+		log.Panic(theerror)
 	}
 	defer client.Disconnect(context.Background())
 	//create a collection in the database
@@ -50,6 +51,7 @@ func main() {
 	pb.RegisterVesselServiceHandler(server.Server(), handler)
 	//run the server
 	if err := server.Run(); err != nil {
-		fmt.Println(err)
+		theerror := fmt.Sprintf("%v --from ConsignementService", err)
+		fmt.Println(theerror)
 	}
 }

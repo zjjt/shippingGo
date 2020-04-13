@@ -27,6 +27,7 @@ func main() {
 	service.Init()
 	pb.RegisterUserServiceHandler(service.Server(), newUserService(repo, tokenservice))
 	if err := service.Run(); err != nil {
-		fmt.Println(err)
+		theerror := fmt.Sprintf("%v --from UserService", err)
+		fmt.Println(theerror)
 	}
 }

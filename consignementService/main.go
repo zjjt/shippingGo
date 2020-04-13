@@ -29,7 +29,7 @@ func AuthWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, res interface{}) error {
 		meta, ok := metadata.FromContext(ctx)
 		if !ok {
-			return errors.New("no auth meta-data found in request")
+			return errors.New("no auth meta-data found in request --from ConsignementService")
 		}
 		//it changed from token to Token
 		token := meta["Token"]
@@ -40,7 +40,8 @@ func AuthWrapper(fn server.HandlerFunc) server.HandlerFunc {
 			Token: token,
 		})
 		if err != nil {
-			return err
+			theerror := fmt.Sprintf("%v --from UserService", err)
+			return errors.New(theerror)
 		}
 		err = fn(ctx, req, res)
 		return err
@@ -62,7 +63,8 @@ func main() {
 	//connect to the database
 	client, err := CreateDBClient(context.Background(), uri, 0)
 	if err != nil {
-		log.Panic(err)
+		theerror := fmt.Sprintf("%v --from ConsignementService", err)
+		log.Panic(theerror)
 	}
 	defer client.Disconnect(context.Background())
 	//create a collection in the database
@@ -73,7 +75,8 @@ func main() {
 	handler := newService(repository, vesselClient)
 	protoB.RegisterShippingServiceHandler(server.Server(), handler)
 	if err := server.Run(); err != nil {
-		fmt.Println(err)
+		theerror := fmt.Sprintf("%v --from ConsignementService", err)
+		fmt.Println(theerror)
 	}
 
 }

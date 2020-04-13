@@ -53,6 +53,7 @@ func main() {
 	//this same context will be passed into both the calls we make
 	//to our consignement service
 	ctx := metadata.NewContext(context.Background(), map[string]string{"token": token})
+	log.Println("content of context is: ", ctx)
 	//and here we pass it into a call to create a consignement
 	r, err := client.CreateConsignement(ctx, consignement)
 	if err != nil {

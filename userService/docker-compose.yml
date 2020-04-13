@@ -5,29 +5,33 @@ services:
     restart: always
     container_name: "shippinggo_userms"
     build: .
-    ports:
-      - 50053:50051
+    # ports:
+    #   - 50053:50051
     depends_on: 
       - "database"
     environment: 
-      MICRO_SERVER_ADDRESS: ":50051"
-      DB_HOST: "database:5432"
+      MICRO_SERVER_ADDRESS: ":50053"
+      MICRO_REGISTERY: "mdns"
+      DB_HOST: "127.0.0.1:5432"
       DB_USER: "postgres"
       DB_PASSWORD: "postgres"
       DB_NAME: "postgres"
-    networks:
-      - shippinggo-backend-tier #network to communicate with the other services
-      - user-tier #internal network to communicate with the DB
+    network_mode: host
+    # networks:
+    #   #- shippinggo-backend-tier #network to communicate with the other services
+    #   - user-tier #internal network to communicate with the DB
+
   database:
+    restart: always
     image: postgres
     ports:
       - 5432:5432
     environment: 
       POSTGRES_PASSWORD: "postgres"
-    networks: 
-      - user-tier
-networks: 
-  shippinggo-backend-tier:
-    external: true
-  user-tier:
-    name: user-tier
+    # networks: 
+    #   - user-tier
+# networks: 
+#   # shippinggo-backend-tier:
+#   #   external: true
+#   user-tier:
+#     name: user-tier

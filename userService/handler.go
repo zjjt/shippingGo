@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 
 	pb "github.com/zjjt/shippingGo/userService/proto/user"
@@ -22,7 +23,8 @@ func newUserService(repo repository, tokenService Authable) *service {
 func (s *service) Get(ctx context.Context, req *pb.User, res *pb.Response) error {
 	user, err := s.repo.Get(req.Id)
 	if err != nil {
-		return err
+		theerror := fmt.Sprintf("%v --from UserService", err)
+		return errors.New(theerror)
 	}
 	res.User = user
 	return nil
@@ -32,7 +34,8 @@ func (s *service) Get(ctx context.Context, req *pb.User, res *pb.Response) error
 func (s *service) GetAll(ctx context.Context, req *pb.Request, res *pb.Response) error {
 	users, err := s.repo.GetAll()
 	if err != nil {
-		return err
+		theerror := fmt.Sprintf("%v --from UserService", err)
+		return errors.New(theerror)
 	}
 	res.Users = users
 	return nil
@@ -44,15 +47,18 @@ func (s *service) Auth(ctx context.Context, req *pb.User, res *pb.Token) error {
 	user, err := s.repo.GetByEmail(req.Email)
 	log.Println("user is ", user)
 	if err != nil {
-		return err
+		theerror := fmt.Sprintf("%v --from UserService", err)
+		return errors.New(theerror)
 	}
 	// Compare the password with the hashed password stored in database
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		return err
+		theerror := fmt.Sprintf("%v --from UserService", err)
+		return errors.New(theerror)
 	}
 	token, err := s.tokenService.Encode(user)
 	if err != nil {
-		return err
+		theerror := fmt.Sprintf("%v --from UserService", err)
+		return errors.New(theerror)
 	}
 	res.Token = token
 	return nil
@@ -63,11 +69,13 @@ func (s *service) Create(ctx context.Context, req *pb.User, res *pb.Response) er
 	//generate hash version of user password
 	hashPass, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return err
+		theerror := fmt.Sprintf("%v --from UserService", err)
+		return errors.New(theerror)
 	}
 	req.Password = string(hashPass)
 	if err := s.repo.Create(req); err != nil {
-		return err
+		theerror := fmt.Sprintf("%v --from UserService", err)
+		return errors.New(theerror)
 	}
 	res.User = req
 	return nil
@@ -78,11 +86,12 @@ func (s *service) ValidateToken(ctx context.Context, req *pb.Token, res *pb.Toke
 	//decode token
 	claims, err := s.tokenService.Decode(req.Token)
 	if err != nil {
-		return err
+		theerror := fmt.Sprintf("%v --from UserService", err)
+		return errors.New(theerror)
 	}
-	log.Println(claims)
+	//log.Println(claims)
 	if claims.User.Id == "" {
-		return errors.New("invalid user")
+		return errors.New("invalid user --from UserService")
 	}
 	res.Valid = true
 	return nil
