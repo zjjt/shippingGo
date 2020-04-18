@@ -2,21 +2,27 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 
+	"github.com/micro/go-micro/v2/broker"
 	pb "github.com/zjjt/shippingGo/userService/proto/user"
 	"golang.org/x/crypto/bcrypt"
 )
 
+//event to be sent
+const topic = "user.created"
+
 type service struct {
 	repo         repository
 	tokenService Authable
+	PubSub       broker.Broker
 }
 
-func newUserService(repo repository, tokenService Authable) *service {
-	return &service{repo, tokenService}
+func newUserService(repo repository, tokenService Authable, pubsub broker.Broker) *service {
+	return &service{repo, tokenService, pubsub}
 }
 
 //Get - retrieves a single user
@@ -78,6 +84,9 @@ func (s *service) Create(ctx context.Context, req *pb.User, res *pb.Response) er
 		return errors.New(theerror)
 	}
 	res.User = req
+	if err := s.publishEvent(req); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -94,5 +103,29 @@ func (s *service) ValidateToken(ctx context.Context, req *pb.Token, res *pb.Toke
 		return errors.New("invalid user --from UserService")
 	}
 	res.Valid = true
+	return nil
+}
+func (s *service) publishEvent(user *pb.User) error {
+	//when sending an event we have to serialize it to bytes
+	//we are sending to our ecosystem the event user.created with the details
+	//concerning that user
+	body, err := json.Marshal(user)
+	if err != nil {
+		theerror := fmt.Sprintf("%v --from UserService", err)
+		return errors.New(theerror)
+	}
+
+	//create a broker message
+	msg := &broker.Message{
+		Header: map[string]string{
+			"id": user.Id,
+		},
+		Body: body,
+	}
+	//publish the message to the broker
+	if err := s.PubSub.Publish(topic, msg); err != nil {
+		theerror := fmt.Sprintf("%v --from UserService", err)
+		log.Printf("[PUB] failed %s\n", theerror)
+	}
 	return nil
 }

@@ -25,7 +25,9 @@ func main() {
 	tokenservice := newtokenService(repo)
 	service := micro.NewService(micro.Name("shippingGo.service.user"))
 	service.Init()
-	pb.RegisterUserServiceHandler(service.Server(), newUserService(repo, tokenservice))
+	//get an instance of the event broker
+	pubsub := service.Server().Options().Broker
+	pb.RegisterUserServiceHandler(service.Server(), newUserService(repo, tokenservice, pubsub))
 	if err := service.Run(); err != nil {
 		theerror := fmt.Sprintf("%v --from UserService", err)
 		fmt.Println(theerror)

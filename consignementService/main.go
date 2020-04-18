@@ -27,6 +27,11 @@ const (
 //if valid the call is passed along to the handler, if not an error is returned
 func AuthWrapper(fn server.HandlerFunc) server.HandlerFunc {
 	return func(ctx context.Context, req server.Request, res interface{}) error {
+		// This skips our auth check if DISABLE_AUTH is set to true
+		//in order to test the service in isolation
+		if os.Getenv("DISABLE_AUTH") == "true" {
+			return fn(ctx, req, res)
+		}
 		meta, ok := metadata.FromContext(ctx)
 		if !ok {
 			return errors.New("no auth meta-data found in request --from ConsignementService")

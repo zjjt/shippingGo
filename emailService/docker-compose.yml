@@ -1,0 +1,11 @@
+version: '3.5'
+
+services:
+  shippinggo_emailms:
+    restart: always
+    container_name: "shippinggo_emailms"
+    build: .
+    environment: 
+      MICRO_SERVER_ADDRESS: ":50054"
+      MICRO_REGISTERY: "mdns"
+    network_mode: host
