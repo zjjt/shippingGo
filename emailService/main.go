@@ -18,6 +18,9 @@ func main() {
 	srv.Init()
 	//get the broker instance
 	pubsub := srv.Server().Options().Broker
+	if err := pubsub.Init(); err != nil {
+		log.Fatalf("Broker Init error: %v", err)
+	}
 	if err := pubsub.Connect(); err != nil {
 		log.Fatal(err)
 	}
